@@ -140,6 +140,8 @@ async function createBloodPressureCommunication(
   return medplum.createResource(communication);
 }
 
+// Encuentra las líneas 159 y 165 y reemplázalas:
+
 async function findPrimaryDoctor(medplum: MedplumClient, patient: Patient): Promise<Practitioner | null> {
   try {
     // Buscar CareTeam del paciente
@@ -156,13 +158,15 @@ async function findPrimaryDoctor(medplum: MedplumClient, patient: Patient): Prom
       );
 
       if (practitionerParticipant?.member?.reference) {
-        return medplum.readReference(practitionerParticipant.member as any) as Promise<Practitioner>;
+        // ✅ Línea 159 - Agregando await explícito
+        return await medplum.readReference(practitionerParticipant.member as any) as Practitioner;
       }
     }
 
     // Fallback: buscar por Patient.generalPractitioner
     if (patient.generalPractitioner?.[0]?.reference) {
-      return medplum.readReference(patient.generalPractitioner[0] as any) as Promise<Practitioner>;
+      // ✅ Línea 165 - Agregando await explícito
+      return await medplum.readReference(patient.generalPractitioner[0] as any) as Practitioner;
     }
 
     return null;
