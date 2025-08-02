@@ -3,12 +3,12 @@ import { BotEvent, MedplumClient } from '@medplum/core';
 import { Observation, Patient, Communication, Practitioner } from '@medplum/fhirtypes';
 import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses';
 
-// Configuración AWS SES
+// Configuración AWS SES con validación de variables de entorno
 const sesClient = new SESClient({
-  region: 'us-east-1', // o tu región preferida
+  region: process.env.AWS_REGION || 'us-east-1',
   credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID || '',
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || '',
   },
 });
 
@@ -73,8 +73,8 @@ async function handleHighBloodPressureWithEmail(
   console.log('👤 Paciente obtenido:', patient.name?.[0]?.given?.[0]);
   
   // 2. Crear Communication en FHIR
-  const communication = await createBloodPressureCommunication(medplum, patient, observation, systolic, diastolic);
-  console.log('💬 Communication creada:', communication.id);
+  const communication = createBloodPressureCommunication(medplum, patient, observation, systolic, diastolic);
+  console.log('💬 Communication creada:', (await communication).id);
   
   // 3. Buscar médico de cabecera
   const primaryDoctor = await findPrimaryDoctor(medplum, patient);
@@ -91,7 +91,7 @@ async function handleHighBloodPressureWithEmail(
     console.log('⚠️ No se encontró médico de cabecera');
     
     // Enviar a email genérico del sistema
-    await sendEmailToSystemAdmin(patient, systolic, diastolic, observation);
+    await sendEmailToSystemAdmin(patient, systolic, diastolic);
   }
 }
 
@@ -137,7 +137,7 @@ async function createBloodPressureCommunication(
     }
   };
 
-  return await medplum.createResource(communication);
+  return medplum.createResource(communication);
 }
 
 async function findPrimaryDoctor(medplum: MedplumClient, patient: Patient): Promise<Practitioner | null> {
@@ -156,13 +156,13 @@ async function findPrimaryDoctor(medplum: MedplumClient, patient: Patient): Prom
       );
 
       if (practitionerParticipant?.member?.reference) {
-        return await medplum.readReference(practitionerParticipant.member as any) as Practitioner;
+        return medplum.readReference(practitionerParticipant.member as any) as Promise<Practitioner>;
       }
     }
 
     // Fallback: buscar por Patient.generalPractitioner
     if (patient.generalPractitioner?.[0]?.reference) {
-      return await medplum.readReference(patient.generalPractitioner[0] as any) as Practitioner;
+      return medplum.readReference(patient.generalPractitioner[0] as any) as Promise<Practitioner>;
     }
 
     return null;
@@ -188,12 +188,14 @@ async function sendEmailToDoctor(
   }
 
   const emailContent = generateDoctorEmailContent(patient, doctor, systolic, diastolic, observation);
+  const fromEmail = process.env.FROM_EMAIL || 'alertas@epa-bienestar.com.ar';
+  const adminEmail = process.env.ADMIN_EMAIL || 'admin@epa-bienestar.com.ar';
 
   const command = new SendEmailCommand({
-    Source: 'alertas@epa-bienestar.com.ar', // Email verificado en SES
+    Source: fromEmail,
     Destination: {
       ToAddresses: [doctorEmail],
-      CcAddresses: ['admin@epa-bienestar.com.ar'] // Copia para administración
+      CcAddresses: [adminEmail]
     },
     Message: {
       Subject: {
@@ -228,7 +230,7 @@ async function sendEmailToDoctor(
     console.log('✅ Email enviado exitosamente:', result.MessageId);
     
     // Registrar el envío en FHIR
-    await logEmailSent(medplum, patient, doctor, result.MessageId || '', 'doctor');
+    await logEmailSent(medplum, patient, doctor, result.MessageId || 'unknown');
     
   } catch (error) {
     console.error('❌ Error enviando email:', error);
@@ -408,14 +410,16 @@ async function createDoctorNotificationCommunication(
 async function sendEmailToSystemAdmin(
   patient: Patient,
   systolic: number,
-  diastolic: number,
-  observation: Observation
+  diastolic: number
 ): Promise<void> {
   
+  const fromEmail = process.env.FROM_EMAIL || 'alertas@epa-bienestar.com.ar';
+  const adminEmail = process.env.ADMIN_EMAIL || 'admin@epa-bienestar.com.ar';
+  
   const command = new SendEmailCommand({
-    Source: 'alertas@epa-bienestar.com.ar',
+    Source: fromEmail,
     Destination: {
-      ToAddresses: ['admin@epa-bienestar.com.ar']
+      ToAddresses: [adminEmail]
     },
     Message: {
       Subject: {
@@ -443,8 +447,7 @@ async function logEmailSent(
   medplum: MedplumClient,
   patient: Patient,
   recipient: Practitioner,
-  messageId: string,
-  type: string
+  _messageId: string
 ): Promise<void> {
   
   const auditEvent = {
