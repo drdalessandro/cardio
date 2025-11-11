@@ -9,6 +9,6 @@ export default defineConfig({
   },
 
   e2e: {
-    baseUrl: 'https://aluar.epa-bienestar.com.ar/',
+    baseUrl: 'https://cardio.epa-bienestar.com.ar/',
   },
 });
