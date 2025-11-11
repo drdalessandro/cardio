@@ -1,0 +1,6 @@
+export const MEDPLUM_BASE_URL = 'https://api.medplum.epa-bienestar.com';
+export const MEDPLUM_PROJECT_ID = '';
+export const MEDPLUM_GOOGLE_CLIENT_ID = '353462803142-7hjqjj6lfubjikafftrjup300460vk6c.apps.googleusercontent.com';
+export const MEDPLUM_RECAPTCHA_SITE_KEY = '6Ld7JUcmAAAAAFvlawfVECYNwYY3qybA_5Si6bF0';
+export const MEDPLUM_REGISTER_ENABLED = 'false';
+export const WDS_SOCKET_PORT = '0';

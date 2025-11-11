@@ -1,0 +1,26 @@
+.patient-page {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  column-gap: 10px;
+}
+
+
+.patient-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.patient-sidebar {
+  display: flex;
+  flex-direction: column;
+}
+
+.patient-observation {
+  display: flex;
+  flex-direction: column;
+  width: 25%;
+}
+

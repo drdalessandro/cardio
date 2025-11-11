@@ -1,0 +1,257 @@
+import { InformationCircleIcon } from '@heroicons/react/24/outline';
+import { createReference, getReferenceString } from '@medplum/core';
+import { BundleEntry, Observation, Patient } from '@medplum/fhirtypes';
+import { useMedplum } from '@medplum/react';
+import React, { Suspense, useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
+import Button from '../../components/Button';
+import InfoSection from '../../components/InfoSection';
+import LinkToPreviousPage from '../../components/LinkToPreviousPage';
+import MeasurementModal from '../../components/MeasurementModal';
+import getLocaleDate from '../../helpers/get-locale-date';
+import renderValue from '../../helpers/get-render-value';
+import NoData from '../../components/NoData';
+
+const LineChart = React.lazy(() => import('../../components/LineChart'));
+
+interface measurementsMetaType {
+  [key: string]: {
+    id: string;
+    code: string;
+    title: string;
+    description: string;
+    chartDatasets: {
+      label: string;
+      backgroundColor: string;
+      borderColor: string;
+    }[];
+  };
+}
+
+interface chartDataType {
+  labels: (string | null | undefined)[];
+  datasets: {
+    label: string;
+    data: (number | undefined)[];
+    backgroundColor: string;
+    borderColor?: string;
+  }[];
+}
+
+export const backgroundColor = 'rgba(29, 112, 214, 0.7)';
+export const borderColor = 'rgba(29, 112, 214, 1)';
+export const secondBackgroundColor = 'rgba(255, 119, 0, 0.7)';
+export const secondBorderColor = 'rgba(255, 119, 0, 1)';
+
+export const measurementsMeta: measurementsMetaType = {
+  height: {
+    id: 'height',
+    code: '8302-2',
+    title: 'Altura',
+    description: 'La medición de la altura es especialmente relevante en el primer año de vida, infancia y adolescencia.',
+    chartDatasets: [
+      {
+        label: 'Altura',
+        backgroundColor,
+        borderColor,
+      },
+    ],
+  },
+  weight: {
+    id: 'weight',
+    code: '29463-7',
+    title: 'Peso',
+    description: 'La evaluación del peso corporal permite determinar contextos de Sobrepeso u Obesidad, cuando se lo relaciona con la altura, al calcular el Indice de Masa Corporal Corporal (IMC). ',
+    chartDatasets: [
+      {
+        label: 'Peso',
+        backgroundColor,
+        borderColor,
+      },
+    ],
+  },
+
+  cintura: {
+    id: 'cintura',
+    code: '56114-2',
+    title: 'Circunferencia Abdominal',
+    description: 'La evaluación de la Circunferencia Abdominal permite medir Sobrepeso u Obesidad, cuando se lo relaciona con la altura, al calcular el Indice de Masa Corporal Corporal (IMC). ',
+    chartDatasets: [
+      {
+        label: 'Cintura',
+        backgroundColor,
+        borderColor,
+      },
+    ],
+  },
+
+  'blood-pressure': {
+    id: 'blood-pressure',
+    code: '85354-9',
+    title: 'Presión Arterial',
+    description:
+      'La medición de la presión arterial permite detectar valores anormales de la presión arterial. Para obtener una buena medición se sugiere utilizar tensiómetros validados clínicamente y al momento de la toma, cumplir con las condiciones óptimas. Valores normales por debajo de 140 / 90 mmHg en sucesivos controles.',
+    chartDatasets: [
+      {
+        label: 'Diastólica',
+        backgroundColor: secondBackgroundColor,
+        borderColor: secondBorderColor,
+      },
+      {
+        label: 'Sistólica',
+        backgroundColor,
+        borderColor,
+      },
+    ],
+  },
+  'heart-rate': {
+    id: 'heart-rate',
+    code: '8867-4',
+    title: 'Frecuencia Cardíaca',
+    description: 'La medición de la frecuencia cardíaca permite determinar la cantidad de latidos por minutor. Valores normales entre 60 y 100 lpm.',
+    chartDatasets: [
+      {
+        label: 'Frecuencia Cardíaca',
+        backgroundColor,
+        borderColor,
+      },
+    ],
+  },
+   'sleep-duration': {
+    id: 'sleep-duration',
+    code: '93832-4',
+    title: 'Duración Sueño',
+    description: 'La medición de la duración del sueño permite determinar la cantidad de horas de descanso por noche. Valores normales entre 7 y 8 horas.',
+    chartDatasets: [
+      {
+        label: 'Duración Sueño',
+        backgroundColor,
+        borderColor,
+      },
+    ],
+  },
+   'activity-duration': {
+    id: 'activity-duration',
+    code: '101691-4',
+    title: 'Duración Ejercicio',
+    description: 'La medición de la duración de la Actividad Física por día, permite determinar sedentarismo. Valores normales > 30 minutos.',
+    chartDatasets: [
+      {
+        label: 'Duración Ejercicio',
+        backgroundColor,
+        borderColor,
+      },
+    ],
+  },
+   'period-duration': {
+    id: 'period-duration',
+    code: '3144-3',
+    title: 'Duración Período',
+    description: 'La medición de la duración del período permite determinar la cantidad de días entre un ciclo y otro. Valores normales entre 25 y 30 días.',
+    chartDatasets: [
+      {
+        label: 'Duración Período',
+        backgroundColor,
+        borderColor,
+      },
+    ],
+  },
+};
+
+const Measurement = (): JSX.Element | null => {
+  const { measurementId } = useParams();
+  const { code, title, description, chartDatasets } = measurementsMeta[measurementId as string];
+  const medplum = useMedplum();
+  const patient = medplum.getProfile() as Patient;
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [chartData, setChartData] = useState<chartDataType>();
+  const measurements = medplum.search('Observation', `code=${code}&patient=${getReferenceString(patient)}`).read();
+  useEffect(() => {
+    if (measurements.entry) {
+      const labels = measurements.entry.map(({ resource }) => {
+        if (resource?.effectiveDateTime) {
+          return getLocaleDate(resource?.effectiveDateTime);
+        }
+      });
+      setChartData({
+        labels,
+        datasets: chartDatasets.map((item, i) => ({
+          ...item,
+          data: getDatasets(i, measurements.entry),
+        })),
+      });
+    }
+  }, [chartDatasets, measurements]);
+
+  if (!measurementId) {
+    return null;
+  }
+  const getDatasets = (index: number, measurements?: BundleEntry<Observation>[]): (number | undefined)[] => {
+    if (measurements) {
+      return measurements.map(({ resource }) =>
+        resource?.component?.length ? resource?.component[index].valueQuantity?.value : resource?.valueQuantity?.value
+      );
+    }
+    return [];
+  };
+
+  const handleAddMeasurement = (): void => {
+    setIsModalOpen(true);
+  };
+  return (
+    <>
+      <LinkToPreviousPage url="/health-record/vitals" label="Vitales" />
+      <div className="mt-5 flex flex-col items-start space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
+        <h1 className="text-3xl font-extrabold">{title}</h1>
+        <Button marginsUtils="ml-0" label="Agregar Medición" action={handleAddMeasurement} />
+      </div>
+      {chartData && (
+        <Suspense fallback={null}>
+          <LineChart chartData={chartData} />
+        </Suspense>
+      )}
+      {description && (
+        <div className="mb-10 overflow-hidden border bg-white p-4 sm:rounded-md">
+          <div className="mb-3 flex items-center text-gray-600">
+            <InformationCircleIcon className="mr-2 h-6 w-6 flex-shrink-0" />
+            <h3 className="text-lg font-bold">¿Qué estamos midiendo?</h3>
+          </div>
+          <p className="text-base text-gray-600">{description}</p>
+        </div>
+      )}
+      {measurements.entry?.length ? (
+        <InfoSection
+          title={
+            <div className="flex justify-between">
+              <p>Mediciones</p>
+              <p>Valores</p>
+            </div>
+          }
+        >
+          <div className="px-4 pt-4 pb-2">
+            {measurements.entry &&
+              [...measurements.entry].reverse().map(({ resource }) => {
+                if (!resource) return null;
+                const time = getLocaleDate(resource.effectiveDateTime, true);
+                return (
+                  <div className="mb-2 flex justify-between" key={resource.id}>
+                    {time && <p>{time}</p>}
+                    {renderValue(resource)}
+                  </div>
+                );
+              })}
+          </div>
+        </InfoSection>
+      ) : (
+        <NoData title="Mediciones" />
+      )}
+      <MeasurementModal
+        subject={createReference(patient)}
+        type={title}
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(!isModalOpen)}
+      />
+    </>
+  );
+};
+export default Measurement;
