@@ -192,7 +192,7 @@ export default function Chat(): JSX.Element | null {
                                                   download
                                                   className="group flex items-center rounded-sm border border-gray-200 px-2 py-1"
                                                 >
-                                                  <DocumentArrowDownIcon className="mr-1 h-6 w-6 text-blue-600 group-hover:text-blue-700" />
+                                                  <DocumentArrowDownIcon className="mr-1 h-6 w-6 text-green-600 group-hover:text-green-700" />
                                                   Descargar adjunto
                                                 </a>
                                               )}
@@ -241,7 +241,7 @@ export default function Chat(): JSX.Element | null {
                               id="comment"
                               name="comentarios"
                               rows={3}
-                              className="block w-full resize-none rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                              className="block w-full resize-none rounded-md border border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm"
                               placeholder="Agregar una nota"
                               value={messageValue}
                               onChange={(e) => setMessageValue(e.target.value)}
