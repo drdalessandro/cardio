@@ -50,7 +50,7 @@ const Carousel = ({ items }: CarouselProps): JSX.Element => {
             {img}
             <h2 className="mt-4 text-lg font-medium text-gray-900">{title}</h2>
             <p className="my-4 text-base font-medium text-gray-500">{description}</p>
-            <a href={url} className="text-base font-medium text-blue-600">
+            <a href={url} className="text-base font-medium text-purple-600">
               {label}
             </a>
           </div>
