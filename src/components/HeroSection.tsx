@@ -17,7 +17,7 @@ import { ChevronDownIcon } from '@heroicons/react/24/solid';
 import { Fragment } from 'react';
 import { Link } from 'react-router-dom';
 import Button from './Button';
-import { ReactComponent as Logo } from '../img/logo.svg';
+import { ReactComponent as Logo } from '../img/logoboskis.svg';
 import WorkingEnvironmentImage from '../img/landingPage/habitos-saludables-para-tu-vida-diaria.jpg';
 
 const features = [
