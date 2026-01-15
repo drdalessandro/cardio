@@ -94,7 +94,7 @@ export function HomePage(): JSX.Element {
       <div className="flex justify-center bg-gray-100 py-4 px-6 text-sm text-neutral-600">
         <span>
           Teleconsulta:{' '}
-          <a href="https://calendar.app.google/JWYcJXgaS7xTE8QS7" className="font-medium text-gray-600">
+          <a href="https://api.whatsapp.com/send/?phone=5491150509600" className="font-medium text-gray-600">
             Solicitar turno on line!
           </a>
         </span>
