@@ -110,7 +110,7 @@ export function HomePage(): JSX.Element {
           </div>Grupo Cardiológico Boskis | MDPA
         </section>
       </div>
-      <div className="flex w-full justify-center bg-gray-900 py-4 px-2 sm:px-4 lg:px-8">
+      <div className="flex w-full justify-center bg-pink-900 py-4 px-2 sm:px-4 lg:px-8">
         <div className="flex flex-col items-center space-y-4 font-medium text-white md:flex-row md:space-y-0 md:space-x-6">
           <GiftIcon className="h-10 w-10 stroke-1 text-white" />
           <p>¿Cómo te va?</p>
