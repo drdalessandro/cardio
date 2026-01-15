@@ -107,7 +107,7 @@ export function HomePage(): JSX.Element {
                 Hola <span className="text-gray-600">{profileName}</span></p>
               <Button url="/health-record/vitals/blood-pressure" label="Ingresar nuevos datos de salud" marginsUtils="m-0 mt-8" paddingUtils="px-10 py-4" fontUtils="medium"/>
             </div>
-          </div>2
+          </div>Grupo Cardiológico Boskis | MDPA
         </section>
       </div>
       <div className="flex w-full justify-center bg-gray-900 py-4 px-2 sm:px-4 lg:px-8">
