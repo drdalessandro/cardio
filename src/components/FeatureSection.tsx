@@ -1,5 +1,5 @@
 import { ChatBubbleBottomCenterTextIcon, GlobeAltIcon, BoltIcon, ScaleIcon } from '@heroicons/react/24/outline';
-import EngineeringImage from '../img/landingPage/EPA-Bienestar-FuentesDeDatos.jpg';
+import EngineeringImage from '../img/landingPage/background_abajo.jpg';
 
 const features = [
   {
