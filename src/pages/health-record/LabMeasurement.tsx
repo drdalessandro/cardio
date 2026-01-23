@@ -1,5 +1,3 @@
-// CREAR NUEVO ARCHIVO: src/pages/health-record/LabMeasurement.tsx
-
 import { InformationCircleIcon } from '@heroicons/react/24/outline';
 import { createReference, getReferenceString } from '@medplum/core';
 import { BundleEntry, Observation, Patient } from '@medplum/fhirtypes';
